@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import Markdown from 'react-markdown';
 import DOMPurify from 'dompurify';
 import { 
@@ -352,7 +352,7 @@ export default function App() {
   // Proses Gambar AI (DRY Principle)
   const processImagesInRef = useCallback(async (ref: React.RefObject<HTMLDivElement>) => {
     if (!ref.current || !apiKey) return;
-    const aiInstance = new GoogleGenAI({ apiKey: apiKey.trim() });
+    const genAI = new GoogleGenerativeAI(apiKey.trim());
     const images = ref.current.querySelectorAll('img.imagen-generator');
     
     for (let i = 0; i < images.length; i++) {
@@ -365,19 +365,11 @@ export default function App() {
       if (prompt) {
         img.src = 'https://placehold.co/600x400/f8f9fa/5c6bc0?text=Membuat+Ilustrasi...';
         try {
-          const response = await aiInstance.models.generateContent({
-            model: 'gemini-3.1-flash-image-preview',
-            contents: { parts: [{ text: prompt }] },
-            config: {
-              imageConfig: {
-                aspectRatio: "16:9",
-                imageSize: "1K"
-              }
-            }
-          });
+          const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-image-preview' });
+          const resultObj = await model.generateContent(prompt);
 
           let base64Image = '';
-          const parts = response.candidates?.[0]?.content?.parts || [];
+          const parts = resultObj.response.candidates?.[0]?.content?.parts || [];
           for (const part of parts) {
             if (part.inlineData) {
               base64Image = `data:image/png;base64,${part.inlineData.data}`;
@@ -416,7 +408,8 @@ export default function App() {
 
     setLoading(true);
     setResult('');
-    const aiInstance = new GoogleGenAI({ apiKey: apiKey.trim() });
+    const genAI = new GoogleGenerativeAI(apiKey.trim());
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     try {
       const prompt = `Kamu adalah Pakar Evaluasi Pendidikan Kurikulum Merdeka tingkat nasional dan Senior Front-End Web Developer kelas dunia.
@@ -463,7 +456,7 @@ ATURAN KONTEN & PEDAGOGIK:
 5. JANGAN tambahkan kolom/baris tanda tangan untuk orang tua/wali maupun guru di bagian bawah naskah soal.
 
 ATURAN DESAIN (STRICT HTML & CSS):
-1. JANGAN gunakan markdown (\`\`\`html). Langsung mulai dengan tag HTML.
+1. JANGAN gunakan format markdown seperti \`\`\`html. Langsung berikan kode HTML murni dimulai dari tag div atau style.
 2. Gunakan CSS internal bergaya Modern/Minimalis (Font Sans-Serif, Spasi Lega, Warna Soft).
 3. Gunakan tag <div style="page-break-after: always;"></div> untuk memisahkan bagian dokumen.
 4. WAJIB gunakan atribut border="1" style="border-collapse: collapse; width: 100%;" pada semua tag <table> agar rapi saat di-export ke Word.
@@ -504,16 +497,18 @@ BAGIAN 3: KARTU SOAL
 - Di dalam kartu, cantumkan "Penyusun: ${namaGuru}".
 - Di bagian akhir seluruh kartu soal, tambahkan pengesahan: Gunakan tabel <table class="ttd-table"><tr><td>Mengetahui,<br>Kepala Sekolah<br><div class="ttd-space"></div><b>${namaKepsek}</b><br>NIP. ${nipKepsek || '.........................'}</td><td>Guru Mata Pelajaran<br><div class="ttd-space"></div><b>${namaGuru}</b><br>NIP. ${nipGuru || '.........................'}</td></tr></table>.`;
 
-      const response = await aiInstance.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
-        contents: prompt,
-      });
+      const resultObj = await model.generateContent(prompt);
+      const responseText = resultObj.response.text();
 
-      setResult(cleanAIOutput(response.text || 'Gagal menghasilkan soal.'));
+      setResult(cleanAIOutput(responseText || 'Gagal menghasilkan soal.'));
       setStats(prev => ({ ...prev, bankSoal: prev.bankSoal + 1 }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating questions:', error);
-      setResult(`Terjadi kesalahan saat menghubungi AI: ${error instanceof Error ? error.message : String(error)}`);
+      if (error?.message?.includes('429') || error?.status === 429 || String(error).includes('429')) {
+        setResult('Kuota AI penuh, silakan tunggu 1 menit.');
+      } else {
+        setResult(`Terjadi kesalahan saat menghubungi AI: ${error instanceof Error ? error.message : String(error)}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -633,7 +628,8 @@ BAGIAN 3: KARTU SOAL
 
     setLoadingModul(true);
     setResultModul('');
-    const aiInstance = new GoogleGenAI({ apiKey: apiKey.trim() });
+    const genAI = new GoogleGenerativeAI(apiKey.trim());
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     try {
       let studentContext = '';
@@ -693,7 +689,7 @@ ATURAN BAHASA & PEDAGOGIK:
 2. Pastikan semua dokumen mencerminkan filosofi Kurikulum Merdeka Kemendikdasmen (berpusat pada siswa, Pembelajaran Mendalam, Dimensi Profil Lulusan).
 
 ATURAN DESAIN (STRICT HTML & CSS):
-1. JANGAN gunakan markdown (\`\`\`html). Langsung mulai dengan tag <div class="perangkat-container">.
+1. JANGAN gunakan format markdown seperti \`\`\`html. Langsung berikan kode HTML murni dimulai dari tag div atau style.
 2. Gunakan CSS internal yang modern, elegan, dan berwarna lembut namun tetap profesional untuk dicetak. Wajib sertakan CSS ini di awal:
    <style>
      .perangkat-container { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #334155; line-height: 1.6; max-width: 100%; margin: 0 auto; }
@@ -852,12 +848,8 @@ Buat dokumen Lembar Kerja Peserta Didik (LKPD) dan Bahan Ajar Kurikulum Merdeka 
 6. RUANG JAWABAN: Sediakan area kosong (titik-titik atau kotak) untuk siswa menjawab.
 7. RUBRIK PENILAIAN SINGKAT: Di bagian akhir LKPD untuk self-assessment siswa.`;
 
-      const response = await aiInstance.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
-        contents: prompt,
-      });
-
-      let responseText = response.text || '';
+      const resultObj = await model.generateContent(prompt);
+      let responseText = resultObj.response.text() || '';
       
       if (jenisPerangkat === 'ALUR TUJUAN PEMBELAJARAN') {
         const scriptMatch = responseText.match(/<script type="application\/json" id="generated-tp-data">([\s\S]*?)<\/script>/);
@@ -884,16 +876,20 @@ Buat dokumen Lembar Kerja Peserta Didik (LKPD) dan Bahan Ajar Kurikulum Merdeka 
           }
           // Remove the JSON block from the display text
           responseText = responseText.replace(/<script type="application\/json" id="generated-tp-data">[\s\S]*?<\/script>/, '')
-                                   .replace(/```json\s*[\s\S]*?\s*```/, '')
-                                   .replace(/\[\s*\{[\s\S]*?\}\s*\]/, '');
+                                     .replace(/```json\s*[\s\S]*?\s*```/, '')
+                                     .replace(/\[\s*\{[\s\S]*?\}\s*\]/, '');
         }
       }
 
       setResultModul(cleanAIOutput(responseText) || 'Gagal menghasilkan perangkat ajar.');
       setStats(prev => ({ ...prev, modulAjar: prev.modulAjar + 1 }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating modul:', error);
-      setResultModul(`Terjadi kesalahan saat menghubungi AI: ${error instanceof Error ? error.message : String(error)}`);
+      if (error?.message?.includes('429') || error?.status === 429 || String(error).includes('429')) {
+        setResultModul('Kuota AI penuh, silakan tunggu 1 menit.');
+      } else {
+        setResultModul(`Terjadi kesalahan saat menghubungi AI: ${error?.message || String(error)}`);
+      }
     } finally {
       setLoadingModul(false);
     }
@@ -1050,7 +1046,8 @@ Buat dokumen Lembar Kerja Peserta Didik (LKPD) dan Bahan Ajar Kurikulum Merdeka 
     }
 
     setLoadingRaporId(studentId);
-    const aiInstance = new GoogleGenAI({ apiKey: apiKey.trim() });
+    const genAI = new GoogleGenerativeAI(apiKey.trim());
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     try {
       const prompt = `Kamu adalah Wali Kelas dan Guru Kurikulum Merdeka yang ahli dalam membuat deskripsi e-Rapor.
@@ -1073,19 +1070,20 @@ ATURAN DESKRIPSI RAPOR KURIKULUM MERDEKA (PPA 2025):
 5. JANGAN menyebutkan angka nilai secara langsung di dalam teks deskripsi.
 6. HANYA KEMBALIKAN TEKS DESKRIPSI SAJA, tanpa basa-basi, tanpa markdown.`;
 
-      const response = await aiInstance.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-      });
+      const resultObj = await model.generateContent(prompt);
+      const deskripsi = resultObj.response.text() || '';
 
-      const deskripsi = response.text || '';
       setGrades(prev => ({
         ...prev,
         [studentId]: { ...studentGrade, deskripsi: deskripsi.trim() }
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating deskripsi rapor:', error);
-      alert('Terjadi kesalahan saat menghubungi AI.');
+      if (error?.message?.includes('429') || error?.status === 429 || String(error).includes('429')) {
+        alert('Kuota AI penuh, silakan tunggu 1 menit.');
+      } else {
+        alert('Terjadi kesalahan saat menghubungi AI.');
+      }
     } finally {
       setLoadingRaporId(null);
     }
@@ -2182,7 +2180,7 @@ ATURAN DESKRIPSI RAPOR KURIKULUM MERDEKA (PPA 2025):
                     </div>
                   )}
 
-                  {!['ALUR TUJUAN PEMBELAJARAN', 'PROTA DAN PROMES', 'ASESMEN AWAL'].includes(jenisPerangkat) && (
+                  {!['ALUR TUJUAN PEMBELAJARAN', 'ASESMEN AWAL'].includes(jenisPerangkat) && (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
                         <label className="block mb-2 text-slate-600 font-medium text-sm">Jumlah Pertemuan</label>
