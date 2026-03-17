@@ -142,12 +142,13 @@ export default function App() {
   const [aiEngine, setAiEngine] = useLocalStorage('aiEngine', 'groq'); // Default ke groq
   const [apiKey, setApiKey] = useLocalStorage('geminiApiKey', import.meta.env.VITE_GEMINI_API_KEY || '');
   const [groqApiKey, setGroqApiKey] = useLocalStorage('groqApiKey', import.meta.env.VITE_GROQ_API_KEY || '');
-// Trik Pro: Cek daftar model GROQ yang aktif di API Key kamu
+
+  // Trik Pro: Cek daftar model GROQ yang aktif di API Key kamu
   useEffect(() => {
     const checkGroqModels = async () => {
       if (aiEngine !== 'groq' || !groqApiKey) return;
       try {
-        const response = await fetch('https://api.groq.com/openai/v1/models', {
+        const response = await fetch('[https://api.groq.com/openai/v1/models](https://api.groq.com/openai/v1/models)', {
           headers: { 'Authorization': `Bearer ${groqApiKey.trim()}` }
         });
         const data = await response.json();
@@ -158,6 +159,7 @@ export default function App() {
     };
     checkGroqModels();
   }, [groqApiKey, aiEngine]);
+
   const fillTemplateCPTP = () => {
     setMapel('Matematika');
     setJenjang('SD');
@@ -211,7 +213,6 @@ export default function App() {
       const newTps: TujuanPembelajaran[] = [];
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i];
-        // Split by comma or semicolon, handle basic quotes
         const separator = line.includes(';') ? ';' : ',';
         const cols = line.split(separator).map(col => col.replace(/^"|"$/g, '').trim());
         
@@ -242,7 +243,6 @@ export default function App() {
       const combinedText = selectedTPs.map(tp => tp.teks).join('\n');
       setTujuanPembelajaran(prev => prev ? `${prev}\n${combinedText}` : combinedText);
       
-      // Auto-fill mapel and kelas from the first selected TP if they are empty
       if (!mapel && selectedTPs[0].mapel) setMapel(selectedTPs[0].mapel);
       if (!kelas && selectedTPs[0].kelas) setKelas(selectedTPs[0].kelas);
     }
@@ -375,15 +375,15 @@ export default function App() {
     return true;
   };
 
-// ==========================================
-  // FUNGSI PUSAT PEMANGGILAN AI (VERSI FIX 404)
+  // ==========================================
+  // FUNGSI PUSAT PEMANGGILAN AI (AUTO-FALLBACK)
   // ==========================================
   const callAI = async (prompt: string): Promise<string> => {
     
     // 1. Fungsi panggil Groq (Model 8B Instant - Awet & Kencang)
     const fetchGroq = async () => {
       console.log("🚀 Mencoba Groq AI...");
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const response = await fetch('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${groqApiKey.trim()}`,
@@ -407,11 +407,10 @@ export default function App() {
       return data.choices[0].message.content;
     };
 
-    // 2. Fungsi panggil Gemini (Gunakan 2.0 Flash agar TIDAK 404)
+    // 2. Fungsi panggil Gemini (Gunakan 2.0 Flash)
     const fetchGemini = async () => {
       console.log("☁️ Mencoba Gemini AI...");
       const genAI = new GoogleGenerativeAI(apiKey.trim());
-      // Kita pakai gemini-2.0-flash karena 1.5-flash sering 404 di beberapa region
       const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }); 
       const resultObj = await model.generateContent(prompt);
       console.log("✅ Gemini Berhasil!");
@@ -425,6 +424,7 @@ export default function App() {
         return await fetchGroq();
       } catch (err: any) {
         console.error("❌ Groq Gagal:", err.message);
+        // Otomatis pindah jika gagal atau kena limit (429)
         if (apiKey) {
           console.warn("🔄 Alih otomatis ke Gemini...");
           return await fetchGemini();
@@ -437,6 +437,7 @@ export default function App() {
         return await fetchGemini();
       } catch (err: any) {
         console.error("❌ Gemini Gagal:", err.message);
+        // Otomatis pindah ke Groq jika gagal
         if (groqApiKey) {
           console.warn("🔄 Alih otomatis ke Groq...");
           return await fetchGroq();
@@ -445,7 +446,8 @@ export default function App() {
       }
     }
   };
-  // Proses Gambar AI (Fallback Menggunakan Pollinations API Gratis jika API Key tidak ada)
+
+  // Proses Gambar AI (Pollinations API Gratis untuk semua mesin)
   const processImagesInRef = useCallback(async (ref: React.RefObject<HTMLDivElement>) => {
     if (!ref.current) return;
     
@@ -458,26 +460,17 @@ export default function App() {
       const prompt = img.getAttribute('alt');
       
       if (prompt) {
-        img.src = '[https://placehold.co/600x400/f8f9fa/5c6bc0?text=Membuat+Ilustrasi](https://placehold.co/600x400/f8f9fa/5c6bc0?text=Membuat+Ilustrasi)...';
+        img.src = '[https://placehold.co/800x600/f8f9fa/5c6bc0?text=Membuat+Ilustrasi](https://placehold.co/800x600/f8f9fa/5c6bc0?text=Membuat+Ilustrasi)...';
         try {
-          if (aiEngine === 'groq' && !apiKey) {
-            // Jika user pakai Groq dan tidak punya key Gemini, gunakan Pollinations AI (Gratis)
-            img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=600&height=400&nologo=true`;
-            img.removeAttribute('alt');
-          } else if (apiKey) {
-            // Jika ada Gemini Key, gunakan Gemini
-            const genAI = new GoogleGenerativeAI(apiKey.trim());
-            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-            // Buat request simpel untuk generate ilustrasi
-            img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=600&height=400&nologo=true`;
-          }
+          // Selalu fallback ke Pollinations secara instan untuk efisiensi
+          img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=600&nologo=true`;
         } catch (error) {
           console.error("Gagal bikin gambar:", error);
-          img.src = '[https://placehold.co/600x400/f8f9fa/ef4444?text=Gagal+Membuat+Gambar](https://placehold.co/600x400/f8f9fa/ef4444?text=Gagal+Membuat+Gambar)';
+          img.src = '[https://placehold.co/800x600/f8f9fa/ef4444?text=Gagal+Membuat+Gambar](https://placehold.co/800x600/f8f9fa/ef4444?text=Gagal+Membuat+Gambar)';
         }
       }
     }
-  }, [apiKey, aiEngine]);
+  }, []);
 
   useEffect(() => {
     if (result) processImagesInRef(resultRef);
@@ -502,6 +495,8 @@ export default function App() {
 
 TUGAS UTAMA:
 Menerima input pengguna ([JENIS ASESMEN], [JENJANG], [MATA PELAJARAN], [TAHUN AJARAN], [NAMA SEKOLAH], [NAMA GURU], [CP/TP/MATERI], [JUMLAH PG/ISIAN/URAIAN], [KARAKTER SOAL], [BUTUH GAMBAR]) dan menghasilkan dokumen asesmen komprehensif HANYA dalam format KODE HTML MURNI yang bergaya elegan, minimalis, dan siap cetak (print-ready) menggunakan CSS internal.
+
+Berikan konten yang SANGAT DETAIL, teknis, dan naratif. JANGAN memberikan placeholder atau definisi umum. JANGAN gunakan markdown seperti \`\`\`html. Langsung berikan kode HTML murni dimulai dari tag div atau style. Sesuaikan konten secara eksplisit dengan data siswa yang ada (Gaya Belajar & Kemampuan) untuk mewujudkan Pembelajaran Berdiferensiasi nyata.
 
 INPUT:
 - Jenis Asesmen: ${jenisAsesmen}
@@ -549,7 +544,7 @@ ATURAN DESAIN (STRICT HTML & CSS):
 5. Gunakan tag HTML semantik standar (<ol>, <ul>, <li>, <strong>, <p>) agar tata letak rapi.
 
 ATURAN KHUSUS JIKA [BUTUH GAMBAR] = "YA" (Sangat Detail):
-Ini adalah aturan krusial untuk fitur "Bener-bener Bikin Gambar". Gemini, kamu tidak bisa melukis, tapi kamu harus menulis tag <img> dengan parameter khusus yang akan dibaca oleh website.
+Ini adalah aturan krusial untuk fitur "Bener-bener Bikin Gambar". Gemini/Groq, kamu tidak bisa melukis, tapi kamu harus menulis tag <img> dengan parameter khusus yang akan dibaca oleh website.
 
 Setiap kali ada soal atau pilihan jawaban yang membutuhkan gambar, kamu WAJIB menulis tag <img> dengan format berikut:
 <img class="imagen-generator" src="" alt="PROMPT DESKRIPSI GAMBAR YANG SUPER DETAIL DI SINI" data-location="QUESTION atau OPTION-A atau OPTION-B, dst">
@@ -732,14 +727,15 @@ INFORMASI KELAS (PEMBELAJARAN BERDIFERENSIASI & DEEP LEARNING):
 ${minatList ? `- Minat Siswa: ${minatList}.` : ''}
 ${kseList ? `- Kondisi Sosial Emosional (KSE): ${kseList}.` : ''}
 
-PENTING: Karena ini adalah kelas dengan karakteristik di atas, WAJIB sertakan strategi Pembelajaran Berdiferensiasi (Konten, Proses, dan Produk) yang secara spesifik mengakomodasi gaya belajar, minat, dan tingkat kemampuan tersebut di dalam kegiatan pembelajaran (Meaningful Learning). Serta sesuaikan kegiatan apersepsi (Mindful Learning) dengan Kondisi Sosial Emosional (KSE) siswa.
-`;
+PENTING: Karena ini adalah kelas dengan karakteristik di atas, WAJIB sertakan strategi Pembelajaran Berdiferensiasi (Konten, Proses, dan Produk) yang secara spesifik mengakomodasi gaya belajar, minat, dan tingkat kemampuan tersebut di dalam kegiatan pembelajaran (Meaningful Learning). Serta sesuaikan kegiatan apersepsi (Mindful Learning) dengan Kondisi Sosial Emosional (KSE) siswa.`;
       }
 
       const prompt = `Kamu adalah Pakar Kurikulum Nasional dari Kementerian Pendidikan Dasar dan Menengah (Kemendikdasmen) dan Desainer Instruksional tingkat lanjut yang spesialis dalam merancang perangkat ajar berbasis "Pembelajaran Mendalam" (Deep Learning: Mindful, Meaningful, Joyful).
 
 TUGAS UTAMA:
 Menerima parameter input pengguna dan menghasilkan dokumen perangkat ajar berupa ${jenisPerangkat} HANYA dalam format KODE HTML MURNI yang bergaya elegan, profesional, dan siap cetak (print-ready A4) menggunakan CSS internal. Output WAJIB sesuai dengan panduan resmi dan format baku dari Kementerian Pendidikan Dasar dan Menengah.
+
+Berikan konten yang SANGAT DETAIL, teknis, dan naratif. JANGAN memberikan placeholder atau definisi umum. Untuk setiap tahap Deep Learning (Mindful, Meaningful, Joyful), tulis minimal 5 langkah instruksi konkret. Sesuaikan konten secara eksplisit dengan data siswa yang ada (Gaya Belajar & Kemampuan) untuk mewujudkan Pembelajaran Berdiferensiasi nyata. JANGAN gunakan markdown seperti \`\`\`html. Langsung berikan kode HTML murni dimulai dari tag div atau style.
 
 PARAMETER INPUT:
 - JENIS PERANGKAT: ${jenisPerangkat}
@@ -827,9 +823,9 @@ STRUKTUR DOKUMEN MODUL AJAR (WAJIB BERURUTAN):
    - Pemahaman Bermakna (Meaningful): (Jelaskan manfaat materi ini dalam kehidupan nyata siswa)
    - Pertanyaan Pemantik: (Buat 2-3 pertanyaan kritis untuk memancing rasa ingin tahu)
 4. KEGIATAN PEMBELAJARAN (Gunakan tabel dengan class="tabel-skenario" berisi 3 kolom: Tahap | Deskripsi Kegiatan | Waktu):
-   - PENDAHULUAN (Mindful Learning - Tahap Memahami): Fokus pada kesiapan belajar (readiness), kesadaran penuh (mindfulness), apersepsi yang menggugah, dan teknik STOP atau ice breaking yang relevan.
-   - KEGIATAN INTI (Meaningful Learning - Tahap Mengaplikasi): Fokus pada kedalaman materi (bukan keluasan), eksplorasi konsep, pemecahan masalah nyata, kolaborasi aktif, dan unjuk kerja nyata.
-   - PENUTUP (Joyful Learning - Tahap Merefleksi): Fokus pada perayaan belajar (celebration), refleksi metakognitif (apa yang dipelajari, bagaimana perasaan, apa rencana selanjutnya), apresiasi, dan penguatan emosional positif.
+   - PENDAHULUAN (Mindful Learning - Tahap Memahami): Fokus pada kesiapan belajar (readiness), kesadaran penuh (mindfulness), apersepsi yang menggugah, dan teknik STOP atau ice breaking yang relevan. Minimal 5 langkah.
+   - KEGIATAN INTI (Meaningful Learning - Tahap Mengaplikasi): Fokus pada kedalaman materi (bukan keluasan), eksplorasi konsep, pemecahan masalah nyata, kolaborasi aktif, dan unjuk kerja nyata. Minimal 5 langkah.
+   - PENUTUP (Joyful Learning - Tahap Merefleksi): Fokus pada perayaan belajar (celebration), refleksi metakognitif (apa yang dipelajari, bagaimana perasaan, apa rencana selanjutnya), apresiasi, dan penguatan emosional positif. Minimal 5 langkah.
 5. ASESMEN:
    - Asesmen Awal (Diagnostik): (Kognitif & Non-Kognitif)
    - Asesmen Proses (Formatif): (Observasi, Performa)
@@ -2617,11 +2613,11 @@ ATURAN DESKRIPSI RAPOR KURIKULUM MERDEKA (PPA 2025):
                     </h4>
                     {aiEngine === 'groq' ? (
                       <ol className="text-sm text-slate-300 space-y-2 list-decimal ml-4">
-                        <li>Buka website <a href="[https://console.groq.com/keys](https://console.groq.com/keys)" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline font-medium">[console.groq.com/keys](https://console.groq.com/keys)</a>.</li>
-                        <li>Login menggunakan akun Google.</li>
+                        <li>Kunjungi <a href="[https://console.groq.com/keys](https://console.groq.com/keys)" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline font-medium">Groq Console</a>.</li>
+                        <li>Login dengan akun Google Anda.</li>
                         <li>Klik tombol <strong>"Create API Key"</strong>.</li>
-                        <li>Salin (Copy) kode yang berawalan <code className="bg-slate-700 px-1 rounded">gsk_</code>.</li>
-                        <li>Tempel (Paste) kode tersebut ke kotak di sebelah kiri.</li>
+                        <li>Beri nama (misal: "SuperApps") lalu salin kode yang berawalan <code className="bg-slate-700 px-1 rounded">gsk_</code>.</li>
+                        <li>Masukkan ke kolom API Key Groq di aplikasi ini.</li>
                       </ol>
                     ) : (
                       <ol className="text-sm text-slate-300 space-y-2 list-decimal ml-4">
