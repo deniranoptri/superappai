@@ -1,0 +1,243 @@
+411:3. Gunakan tag <div style="page-break-after: always;"></div> untuk memisahkan bagian dokumen.
+432:- Di bagian bawah tabel kisi-kisi, tambahkan pengesahan: Gunakan tabel <table class="ttd-table"><tr><td>Mengetahui,<br>Kepala Sekolah<br><div class="ttd-space"></div><b>${namaKepsek}</b><br>NIP. ${nipKepsek || '.........................'}</td><td>Guru Mata Pelajaran<br><div class="ttd-space"></div><b>${namaGuru}</b><br>NIP. ${nipGuru || '.........................'}</td></tr></table>.
+434:<div style="page-break-after: always;"></div>
+442:<div style="page-break-after: always;"></div>
+448:- Di bagian akhir seluruh kartu soal, tambahkan pengesahan: Gunakan tabel <table class="ttd-table"><tr><td>Mengetahui,<br>Kepala Sekolah<br><div class="ttd-space"></div><b>${namaKepsek}</b><br>NIP. ${nipKepsek || '.........................'}</td><td>Guru Mata Pelajaran<br><div class="ttd-space"></div><b>${namaGuru}</b><br>NIP. ${nipGuru || '.........................'}</td></tr></table>.`;
+533:    const footer = "</div></body></html>";
+669:3. JIKA INPUT BUTUH GAMBAR/ILUSTRASI = "Ya": Wajib sisipkan 2-3 gambar ilustrasi materi atau kegiatan menggunakan tag <div class="img-wrapper"><img class="imagen-generator" alt="[Tulis prompt gambar detail dalam bahasa Inggris, contoh: A high quality clean vector illustration of students doing science experiment, flat design, educational style, 4k resolution, no text]" src="" /></div>. Biarkan atribut src kosong.
+670:4. Page-break: Gunakan <div style="page-break-after: always;"></div> jika dokumen lebih dari satu halaman agar rapi saat dicetak.
+708:9. PENGESAHAN: Gunakan tabel <table class="ttd-table"><tr><td>Mengetahui,<br>Kepala Sekolah<br><div class="ttd-space"></div><b>${namaKepsek}</b><br>NIP. ${nipKepsek || '.........................'}</td><td>Guru Mata Pelajaran<br><div class="ttd-space"></div><b>${namaGuru}</b><br>NIP. ${nipGuru || '.........................'}</td></tr></table>.
+1083:              </div>
+1098:                </div>
+1100:              </div>
+1119:                </div>
+1120:              </div>
+1126:            </div>
+1158:          </div>
+1162:        </div>
+1168:              </div>
+1193:            </div>
+1195:        </div>
+1203:            </div>
+1207:            </div>
+1208:          </div>
+1222:          </div>
+1223:        </div>
+1233:          </div>
+1251:                </div>
+1260:                    </div>
+1261:                  </div>
+1263:              </div>
+1270:                  </div>
+1274:                  </div>
+1275:                </div>
+1279:                  </div>
+1283:                  </div>
+1284:                </div>
+1288:                  </div>
+1292:                  </div>
+1293:                </div>
+1294:              </div>
+1302:                  </div>
+1309:                  </div>
+1316:                  </div>
+1320:              </div>
+1350:                </div>
+1351:              </div>
+1358:                </div>
+1362:              </div>
+1363:            </div>
+1372:                </div>
+1396:                </div>
+1397:              </div>
+1408:                    </div>
+1419:                    </div>
+1430:                        </div>
+1431:                      </div>
+1432:                    </div>
+1433:                  </div>
+1434:                </div>
+1444:                    </div>
+1448:                    </div>
+1455:                    </div>
+1463:                    </div>
+1471:                    </div>
+1482:                    </div>
+1492:                    </div>
+1493:                  </div>
+1497:                  </div>
+1498:                </div>
+1564:                </div>
+1565:              </div>
+1566:            </div>
+1575:                </div>
+1586:                </div>
+1587:              </div>
+1595:                  </div>
+1600:                  </div>
+1606:                    </div>
+1610:                    </div>
+1614:                    </div>
+1615:                  </div>
+1621:                    </div>
+1625:                    </div>
+1626:                  </div>
+1640:                    </div>
+1642:                  </div>
+1652:                      </div>
+1656:                      </div>
+1660:                      </div>
+1661:                    </div>
+1662:                  </div>
+1667:                  </div>
+1672:                  </div>
+1695:                      </div>
+1697:                  </div>
+1702:                  </div>
+1707:                  </div>
+1708:                </div>
+1718:                </div>
+1743:                              <div className="font-bold text-slate-800 print:text-black mb-1">{jurnal.mapel}</div>
+1744:                              <div className="text-sm font-medium text-emerald-700 print:text-black mb-1">Materi: {jurnal.materi}</div>
+1745:                              <div className="text-xs text-slate-600 print:text-black italic">TP: {jurnal.tujuanPembelajaran}</div>
+1748:                              <div className="mb-1"><strong>Mindful:</strong> {jurnal.kegiatanMindful || '-'}</div>
+1749:                              <div className="mb-1"><strong>Meaningful:</strong> {jurnal.kegiatanMeaningful || '-'}</div>
+1750:                              <div className="mb-1"><strong>Joyful:</strong> {jurnal.kegiatanJoyful || '-'}</div>
+1751:                              <div className="mt-2 text-xs bg-slate-100 print:bg-transparent p-1 rounded"><strong>Asesmen:</strong> {jurnal.asesmen || '-'}</div>
+1769:                </div>
+1778:                  </div>
+1785:                  </div>
+1786:                </div>
+1787:              </div>
+1788:            </div>
+1814:                  </div>
+1828:                </div>
+1840:                </div>
+1841:              </div>
+1854:              </div>
+1869:                </div>
+1882:                </div>
+1895:                </div>
+1896:              </div>
+1912:                </div>
+1925:                </div>
+1926:              </div>
+1945:            </div>
+1946:          </div>
+1977:                </div>
+1978:              </div>
+1984:            </div>
+1986:            </div>
+2017:                    </div>
+2029:                      </div>
+2031:                  </div>
+2032:                </div>
+2051:                      </div>
+2063:                      </div>
+2064:                    </div>
+2077:                    </div>
+2087:                    </div>
+2088:                  </div>
+2102:                    </div>
+2116:                      </div>
+2126:                      </div>
+2127:                    </div>
+2140:                    </div>
+2142:                </div>
+2162:                        </div>
+2172:                        </div>
+2182:                        </div>
+2183:                      </div>
+2210:                    </div>
+2211:                  </div>
+2227:                    </div>
+2235:                  </div>
+2241:                        <div className="font-bold mb-1">Mode Berdiferensiasi Aktif!</div>
+2243:                      </div>
+2244:                    </div>
+2246:                </div>
+2267:              </div>
+2298:                    </div>
+2299:                  </div>
+2305:                </div>
+2319:                  </div>
+2361:                              </div>
+2367:                  </div>
+2368:                </div>
+2370:            </div>
+2379:                </div>
+2391:                  </div>
+2395:                </div>
+2396:              </div>
+2466:                </div>
+2467:              </div>
+2468:            </div>
+2477:                </div>
+2478:              </div>
+2482:                <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none"><Sparkles className="w-32 h-32" /></div>
+2487:                </div>
+2500:                    </div>
+2502:                  </div>
+2512:                  </div>
+2513:                </div>
+2514:              </div>
+2521:                </div>
+2532:                  </div>
+2542:                  </div>
+2552:                  </div>
+2562:                  </div>
+2563:                </div>
+2564:              </div>
+2571:                </div>
+2582:                  </div>
+2592:                  </div>
+2605:                  </div>
+2615:                  </div>
+2626:                  </div>
+2627:                </div>
+2628:              </div>
+2637:                  </div>
+2638:                </div>
+2644:                    </div>
+2652:                      ></div>
+2653:                    </div>
+2655:                  </div>
+2663:                      <div className="font-bold text-slate-800 text-sm">Hapus Semua TP</div>
+2664:                      <div className="text-xs text-slate-500">Kosongkan database Tujuan Pembelajaran</div>
+2671:                      <div className="font-bold text-slate-800 text-sm">Hapus Data Siswa</div>
+2672:                      <div className="text-xs text-slate-500">Hapus semua daftar siswa & profilnya</div>
+2679:                      <div className="font-bold text-slate-800 text-sm">Hapus Jurnal</div>
+2680:                      <div className="text-xs text-slate-500">Hapus semua riwayat jurnal mengajar</div>
+2687:                      <div className="font-bold text-slate-800 text-sm">Hapus Nilai Rapor</div>
+2688:                      <div className="text-xs text-slate-500">Kosongkan semua nilai & deskripsi rapor</div>
+2695:                      <div className="font-bold text-red-700 text-sm">RESET TOTAL APLIKASI</div>
+2696:                      <div className="text-xs text-red-600/70">Hapus SEMUA data termasuk API Key & Pengaturan Sekolah (Mulai dari nol)</div>
+2698:                  </div>
+2699:                </div>
+2700:              </div>
+2707:                  </div>
+2716:              </div>
+2717:            </div>
+2730:                  </div>
+2734:                </div>
+2747:                  </div>
+2762:                      </div>
+2763:                    </div>
+2777:                      </div>
+2778:                    </div>
+2779:                  </div>
+2780:                </div>
+2815:                </div>
+2837:                        </div>
+2863:                          <div className="font-medium text-slate-800 mb-2 leading-relaxed">{tp.teks}</div>
+2867:                          </div>
+2868:                        </div>
+2881:                      </div>
+2884:                </div>
+2889:                  </div>
+2905:                  </div>
+2906:                </div>
+2907:              </div>
+2908:            </div>
+2910:        </div>
+2912:    </div>

@@ -1,0 +1,253 @@
+411:3. Gunakan tag <div style="page-break-after: always;"></div> untuk memisahkan bagian dokumen.
+432:- Di bagian bawah tabel kisi-kisi, tambahkan pengesahan: Gunakan tabel <table class="ttd-table"><tr><td>Mengetahui,<br>Kepala Sekolah<br><div class="ttd-space"></div><b>${namaKepsek}</b><br>NIP. ${nipKepsek || '.........................'}</td><td>Guru Mata Pelajaran<br><div class="ttd-space"></div><b>${namaGuru}</b><br>NIP. ${nipGuru || '.........................'}</td></tr></table>.
+434:<div style="page-break-after: always;"></div>
+442:<div style="page-break-after: always;"></div>
+448:- Di bagian akhir seluruh kartu soal, tambahkan pengesahan: Gunakan tabel <table class="ttd-table"><tr><td>Mengetahui,<br>Kepala Sekolah<br><div class="ttd-space"></div><b>${namaKepsek}</b><br>NIP. ${nipKepsek || '.........................'}</td><td>Guru Mata Pelajaran<br><div class="ttd-space"></div><b>${namaGuru}</b><br>NIP. ${nipGuru || '.........................'}</td></tr></table>.`;
+480:    htmlContent = htmlContent.replace(/<div[^>]*style="[^"]*page-break-after:\s*always[^"]*"[^>]*>.*?<\/div>/gi, '<br clear="all" style="page-break-before:always" />');
+531:        <div class="WordSection1">
+639:1. JANGAN gunakan markdown (\`\`\`html). Langsung mulai dengan tag <div class="perangkat-container">.
+669:3. JIKA INPUT BUTUH GAMBAR/ILUSTRASI = "Ya": Wajib sisipkan 2-3 gambar ilustrasi materi atau kegiatan menggunakan tag <div class="img-wrapper"><img class="imagen-generator" alt="[Tulis prompt gambar detail dalam bahasa Inggris, contoh: A high quality clean vector illustration of students doing science experiment, flat design, educational style, 4k resolution, no text]" src="" /></div>. Biarkan atribut src kosong.
+670:4. Page-break: Gunakan <div style="page-break-after: always;"></div> jika dokumen lebih dari satu halaman agar rapi saat dicetak.
+708:9. PENGESAHAN: Gunakan tabel <table class="ttd-table"><tr><td>Mengetahui,<br>Kepala Sekolah<br><div class="ttd-space"></div><b>${namaKepsek}</b><br>NIP. ${nipKepsek || '.........................'}</td><td>Guru Mata Pelajaran<br><div class="ttd-space"></div><b>${namaGuru}</b><br>NIP. ${nipGuru || '.........................'}</td></tr></table>.
+1072:            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-emerald-500/20 rounded-full blur-[100px] animate-pulse" />
+1073:            <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-[100px] animate-pulse delay-700" />
+1081:              <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 p-6 rounded-3xl shadow-2xl mb-8 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+1092:              <div className="flex items-center gap-4 mb-16">
+1093:                <div className="h-px w-12 bg-zinc-800" />
+1094:                <div className="flex gap-4">
+1099:                <div className="h-px w-12 bg-zinc-800" />
+1102:              <div className="space-y-4">
+1106:                <div className="flex gap-6 justify-center mt-6">
+1123:            <div className="absolute bottom-10 flex flex-col items-center gap-2">
+1131:    <div className="flex h-screen bg-zinc-50 font-sans text-slate-800 overflow-hidden">
+1146:        <div 
+1154:        <div className="p-5 text-lg font-bold border-b border-zinc-800 flex items-center justify-between gap-3 text-white">
+1155:          <div className="flex items-center gap-3">
+1163:        <div className="py-2 flex-1 overflow-y-auto scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
+1165:            <div key={category.title} className="mb-4">
+1166:              <div className="px-6 py-2 text-xs font-bold text-zinc-500 tracking-wider">
+1198:        <div className="p-6 border-t border-zinc-900 bg-zinc-950/50">
+1200:          <div className="flex items-center gap-3 mb-4">
+1201:            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
+1204:            <div>
+1209:          <div className="flex gap-3">
+1227:      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+1230:          <div className="flex items-center gap-2">
+1243:          <div className="max-w-4xl mx-auto print:max-w-none print:w-full">
+1245:            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+1247:              <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-2xl p-8 text-white shadow-lg border border-zinc-800 relative overflow-hidden">
+1248:                <div className="relative z-10">
+1254:                  <div className="mt-6 bg-red-500/20 border border-red-500/50 p-4 rounded-xl flex items-start gap-3 relative z-10">
+1256:                    <div>
+1266:              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+1267:                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+1268:                  <div className="bg-blue-100 p-4 rounded-lg text-blue-600">
+1271:                  <div>
+1276:                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+1277:                  <div className="bg-purple-100 p-4 rounded-lg text-purple-600">
+1280:                  <div>
+1285:                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+1286:                  <div className="bg-green-100 p-4 rounded-lg text-green-600">
+1289:                  <div>
+1298:              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+1300:                  <div className="bg-amber-100 w-12 h-12 rounded-lg flex items-center justify-center text-amber-600 mb-4 group-hover:scale-110 transition-transform">
+1307:                  <div className="bg-emerald-100 w-12 h-12 rounded-lg flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
+1314:                  <div className="bg-indigo-100 w-12 h-12 rounded-lg flex items-center justify-center text-indigo-600 mb-4 group-hover:scale-110 transition-transform">
+1324:              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+1325:                <div className="h-80 w-full">
+1354:              <div className="mt-8 bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl p-8 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
+1355:                <div>
+1367:            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+1368:              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+1369:                <div>
+1373:                <div className="flex flex-wrap gap-2">
+1401:                <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+1402:                  <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl animate-in zoom-in-95 duration-200">
+1403:                    <div className="flex justify-between items-center mb-4">
+1410:                    <div className="bg-blue-50 text-blue-800 p-4 rounded-xl mb-6 text-sm border border-blue-100">
+1421:                    <div className="flex flex-col gap-4">
+1426:                      <div className="relative">
+1428:                        <div className="flex items-center justify-center gap-2 w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-medium transition-colors">
+1438:                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-6 animate-in fade-in slide-in-from-top-4">
+1440:                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+1441:                    <div>
+1445:                    <div>
+1449:                    <div>
+1456:                    <div>
+1464:                    <div>
+1472:                    <div>
+1483:                    <div>
+1494:                  <div className="flex justify-end gap-2">
+1501:              <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+1502:                <div className="overflow-x-auto">
+1570:            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+1571:              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
+1572:                <div>
+1576:                <div className="flex gap-2">
+1591:                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 print:hidden animate-in zoom-in-95">
+1592:                  <div className="flex justify-between items-center mb-4 border-b pb-4">
+1597:                  <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-6 flex gap-3 text-sm text-blue-800">
+1602:                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+1603:                    <div>
+1607:                    <div>
+1611:                    <div>
+1617:                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+1618:                    <div>
+1622:                    <div>
+1628:                  <div className="mb-4">
+1629:                    <div className="flex justify-between items-center mb-2">
+1644:                  <div className="mb-4 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+1648:                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+1649:                      <div>
+1653:                      <div>
+1657:                      <div>
+1664:                  <div className="mb-4">
+1669:                  <div className="mb-4">
+1675:                  <div className="mb-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+1680:                      <div className="flex flex-wrap gap-2">
+1699:                  <div className="mb-6">
+1704:                  <div className="flex justify-end gap-2">
+1712:              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:border-none print:shadow-none print:mt-0">
+1713:                <div className="hidden print:block mb-8 text-center">
+1719:                <div className="overflow-x-auto">
+1743:                              <div className="font-bold text-slate-800 print:text-black mb-1">{jurnal.mapel}</div>
+1744:                              <div className="text-sm font-medium text-emerald-700 print:text-black mb-1">Materi: {jurnal.materi}</div>
+1745:                              <div className="text-xs text-slate-600 print:text-black italic">TP: {jurnal.tujuanPembelajaran}</div>
+1748:                              <div className="mb-1"><strong>Mindful:</strong> {jurnal.kegiatanMindful || '-'}</div>
+1749:                              <div className="mb-1"><strong>Meaningful:</strong> {jurnal.kegiatanMeaningful || '-'}</div>
+1750:                              <div className="mb-1"><strong>Joyful:</strong> {jurnal.kegiatanJoyful || '-'}</div>
+1751:                              <div className="mt-2 text-xs bg-slate-100 print:bg-transparent p-1 rounded"><strong>Asesmen:</strong> {jurnal.asesmen || '-'}</div>
+1771:                <div className="hidden print:flex justify-between mt-16 px-12">
+1772:                  <div className="text-center">
+1779:                  <div className="text-center">
+1792:            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+1797:              <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 mb-8 print:hidden">
+1798:                <div className="space-y-5">
+1799:                  <div>
+1816:              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+1817:                <div>
+1829:                <div>
+1843:              <div>
+1856:              <div className="grid grid-cols-3 gap-4">
+1857:                <div>
+1870:                <div>
+1883:                <div>
+1898:              <div className="grid grid-cols-2 gap-4">
+1899:                <div>
+1913:                <div>
+1950:            <div className={`${isFullscreenBankSoal ? 'fixed inset-0 z-[100] bg-white p-4 md:p-8 overflow-y-auto' : 'bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100'} animate-in fade-in slide-in-from-bottom-4 duration-500 print:shadow-none print:border-none print:p-0 print:static`}>
+1951:              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-3 gap-4 print:hidden">
+1956:                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+1979:              <div 
+1990:            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+1995:              <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 mb-8 print:hidden">
+1998:                <div className="mb-8">
+2000:                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+2001:                    <div>
+2019:                      <div>
+2035:                <div className="mb-8">
+2039:                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+2040:                      <div>
+2052:                      <div>
+2067:                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+2068:                    <div>
+2078:                    <div>
+2091:                    <div className="mb-4">
+2106:                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+2107:                      <div>
+2117:                      <div className="md:col-span-3">
+2131:                    <div className="mb-4">
+2149:                    <div className="mb-6">
+2152:                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+2153:                        <div>
+2163:                        <div>
+2173:                        <div>
+2185:                      <div className="mb-6">
+2189:                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+2213:                  <div className="mb-4">
+2214:                    <div className="flex justify-between items-center mb-2">
+2238:                    <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-sm text-indigo-800 flex items-start gap-3">
+2240:                      <div>
+2241:                        <div className="font-bold mb-1">Mode Berdiferensiasi Aktif!</div>
+2271:                <div className={`${isFullscreenModulAjar ? 'fixed inset-0 z-[100] bg-white p-4 md:p-8 overflow-y-auto' : 'bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100'} animate-in fade-in slide-in-from-bottom-4 duration-500 print:shadow-none print:border-none print:p-0 print:static`}>
+2272:                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-3 gap-4 print:hidden">
+2277:                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+2300:                  <div 
+2310:                <div className="mt-8 bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 print:hidden">
+2311:                  <div className="flex items-center justify-between mb-6 border-b pb-3">
+2320:                  <div className="overflow-x-auto">
+2337:                              <div className="flex justify-end gap-2">
+2374:            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+2375:              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 print:hidden">
+2376:                <div>
+2380:                <div className="flex items-center gap-3">
+2381:                  <div className="flex items-center gap-3 bg-white p-2 px-3 rounded-lg border border-slate-200 shadow-sm">
+2398:              <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+2399:                <div className="overflow-x-auto">
+2472:            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+2473:              <div className="flex items-center justify-between">
+2474:                <div>
+2481:              <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl shadow-lg border border-slate-700 overflow-hidden relative">
+2482:                <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none"><Sparkles className="w-32 h-32" /></div>
+2483:                <div className="p-6 border-b border-slate-700/50 relative z-10">
+2488:                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+2489:                  <div>
+2491:                    <div className="relative">
+2503:                  <div className="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
+2516:              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+2517:                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+2522:                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+2523:                  <div>
+2533:                  <div>
+2543:                  <div>
+2553:                  <div>
+2566:              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+2567:                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+2572:                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+2573:                  <div>
+2583:                  <div>
+2593:                  <div>
+2606:                  <div>
+2616:                  <div>
+2630:              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+2631:                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+2635:                  <div className="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded">
+2639:                <div className="p-6 space-y-6">
+2640:                  <div>
+2641:                    <div className="flex justify-between text-sm mb-2">
+2645:                    <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200">
+2646:                      <div 
+2657:                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+2663:                      <div className="font-bold text-slate-800 text-sm">Hapus Semua TP</div>
+2664:                      <div className="text-xs text-slate-500">Kosongkan database Tujuan Pembelajaran</div>
+2671:                      <div className="font-bold text-slate-800 text-sm">Hapus Data Siswa</div>
+2672:                      <div className="text-xs text-slate-500">Hapus semua daftar siswa & profilnya</div>
+2679:                      <div className="font-bold text-slate-800 text-sm">Hapus Jurnal</div>
+2680:                      <div className="text-xs text-slate-500">Hapus semua riwayat jurnal mengajar</div>
+2687:                      <div className="font-bold text-slate-800 text-sm">Hapus Nilai Rapor</div>
+2688:                      <div className="text-xs text-slate-500">Kosongkan semua nilai & deskripsi rapor</div>
+2695:                      <div className="font-bold text-red-700 text-sm">RESET TOTAL APLIKASI</div>
+2696:                      <div className="text-xs text-red-600/70">Hapus SEMUA data termasuk API Key & Pengaturan Sekolah (Mulai dari nol)</div>
+2702:              <div className="flex justify-end items-center gap-4">
+2704:                  <div className="text-emerald-600 flex items-center gap-2 text-sm font-medium animate-in fade-in duration-300">
+2721:            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+2722:              <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+2723:                <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+2724:                  <div>
+2737:                <div className="p-4 border-b border-slate-100 bg-white space-y-4">
+2738:                  <div className="relative">
+2748:                  <div className="flex flex-wrap gap-3">
+2749:                    <div className="flex-1 min-w-[150px]">
+2751:                      <div className="relative">
+2764:                    <div className="flex-1 min-w-[150px]">
+2766:                      <div className="relative">
+2782:                <div className="p-3 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+2817:                <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
+2828:                        <div className="text-center py-16 text-slate-400">
+2842:                      <div 
+2862:                        <div className="flex-1">
+2863:                          <div className="font-medium text-slate-800 mb-2 leading-relaxed">{tp.teks}</div>
+2864:                          <div className="flex items-center gap-2">
+2886:                <div className="p-5 border-t border-slate-100 bg-white flex justify-between items-center">
+2887:                  <div className="text-xs text-slate-400 font-medium">
+2890:                  <div className="flex gap-3">
