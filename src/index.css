@@ -1,0 +1,68 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  background-color: #f4f7f6;
+}
+
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Print Styles for Perfect PDF Generation */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .prose {
+    max-width: 100% !important;
+    font-size: 12pt !important;
+  }
+
+  /* Ensure tables don't break awkwardly */
+  table {
+    page-break-inside: auto;
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  
+  th, td {
+    border: 1px solid #000 !important;
+    padding: 8px !important;
+  }
+  
+  h1, h2, h3 {
+    page-break-after: avoid;
+    color: black !important;
+  }
+  
+  img {
+    page-break-inside: avoid;
+    max-width: 100% !important;
+  }
+
+  @page {
+    margin: 2cm;
+    size: A4 portrait;
+  }
+}
