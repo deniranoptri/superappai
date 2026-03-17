@@ -409,7 +409,7 @@ export default function App() {
     setLoading(true);
     setResult('');
     const genAI = new GoogleGenerativeAI(apiKey.trim());
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash' });
 
     try {
       const prompt = `Kamu adalah Pakar Evaluasi Pendidikan Kurikulum Merdeka tingkat nasional dan Senior Front-End Web Developer kelas dunia.
