@@ -376,14 +376,14 @@ export default function App() {
   };
 
   // ==========================================
-  // FUNGSI PUSAT PEMANGGILAN AI (AUTO-FALLBACK)
+  // FUNGSI PUSAT PEMANGGILAN AI (AUTO-FALLBACK PRO)
   // ==========================================
   const callAI = async (prompt: string): Promise<string> => {
     
     // 1. Fungsi panggil Groq (Model 8B Instant - Awet & Kencang)
     const fetchGroq = async () => {
       console.log("🚀 Mencoba Groq AI...");
-      const response = await fetch('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${groqApiKey.trim()}`,
@@ -397,52 +397,70 @@ export default function App() {
         })
       });
       
+      // FIX: Baca sebagai Teks dulu agar tidak crash "Unexpected end of JSON"
+      const responseText = await response.text();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Groq Error: ${response.status} - ${errorData.error?.message || ''}`);
+        let errorMessage = responseText;
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error?.message || `Error Code: ${response.status}`;
+        } catch (e) {
+          console.warn("Groq mengirim response HTML/String mati.");
+        }
+        throw new Error(`Groq Gagal: ${errorMessage}`);
       }
       
-      const data = await response.json();
-      console.log("✅ Groq Berhasil!");
-      return data.choices[0].message.content;
+      try {
+        const data = JSON.parse(responseText);
+        console.log("✅ Groq Berhasil!");
+        return data.choices[0].message.content;
+      } catch (e) {
+        throw new Error("Gagal membaca data dari server Groq. Format JSON terpotong.");
+      }
     };
 
     // 2. Fungsi panggil Gemini (Gunakan 2.0 Flash)
     const fetchGemini = async () => {
       console.log("☁️ Mencoba Gemini AI...");
-      const genAI = new GoogleGenerativeAI(apiKey.trim());
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }); 
-      const resultObj = await model.generateContent(prompt);
-      console.log("✅ Gemini Berhasil!");
-      return resultObj.response.text();
+      try {
+        const genAI = new GoogleGenerativeAI(apiKey.trim());
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }); 
+        const resultObj = await model.generateContent(prompt);
+        console.log("✅ Gemini Berhasil!");
+        return resultObj.response.text();
+      } catch (error: any) {
+        // Tangkap error bawaan SDK Gemini (Safety block, Quota, dll)
+        throw new Error(`Gemini Gagal: ${error.message || 'Koneksi/API Key bermasalah'}`);
+      }
     };
 
-    // 3. LOGIKA EKSEKUSI DENGAN FALLBACK
+    // 3. LOGIKA EKSEKUSI DENGAN FALLBACK YANG RAPI
     if (aiEngine === 'groq') {
       try {
         if (!groqApiKey) throw new Error("API Key Groq belum diisi");
         return await fetchGroq();
       } catch (err: any) {
-        console.error("❌ Groq Gagal:", err.message);
-        // Otomatis pindah jika gagal atau kena limit (429)
+        console.error("❌", err.message);
+        // Otomatis pindah ke Gemini jika Groq gagal/limit
         if (apiKey) {
           console.warn("🔄 Alih otomatis ke Gemini...");
           return await fetchGemini();
         }
-        throw new Error(`Groq Gagal (${err.message}) & Cadangan Gemini Kosong.`);
+        throw new Error(`${err.message} (Sistem tidak bisa beralih karena API Key Gemini kosong).`);
       }
     } else {
       try {
         if (!apiKey) throw new Error("API Key Gemini belum diisi");
         return await fetchGemini();
       } catch (err: any) {
-        console.error("❌ Gemini Gagal:", err.message);
-        // Otomatis pindah ke Groq jika gagal
+        console.error("❌", err.message);
+        // Otomatis pindah ke Groq jika Gemini gagal/limit
         if (groqApiKey) {
           console.warn("🔄 Alih otomatis ke Groq...");
           return await fetchGroq();
         }
-        throw new Error(`Gemini Gagal (${err.message}) & Cadangan Groq Kosong.`);
+        throw new Error(`${err.message} (Sistem tidak bisa beralih karena API Key Groq kosong).`);
       }
     }
   };
