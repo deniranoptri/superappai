@@ -409,7 +409,7 @@ export default function App() {
     setLoading(true);
     setResult('');
     const genAI = new GoogleGenerativeAI(apiKey.trim());
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     try {
       const prompt = `Kamu adalah Pakar Evaluasi Pendidikan Kurikulum Merdeka tingkat nasional dan Senior Front-End Web Developer kelas dunia.
@@ -629,7 +629,7 @@ BAGIAN 3: KARTU SOAL
     setLoadingModul(true);
     setResultModul('');
     const genAI = new GoogleGenerativeAI(apiKey.trim());
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     try {
       let studentContext = '';
@@ -1047,7 +1047,7 @@ Buat dokumen Lembar Kerja Peserta Didik (LKPD) dan Bahan Ajar Kurikulum Merdeka 
 
     setLoadingRaporId(studentId);
     const genAI = new GoogleGenerativeAI(apiKey.trim());
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     try {
       const prompt = `Kamu adalah Wali Kelas dan Guru Kurikulum Merdeka yang ahli dalam membuat deskripsi e-Rapor.
