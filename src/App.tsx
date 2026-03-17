@@ -12,7 +12,8 @@ import {
   Printer, Download, Plus, Edit2, Trash2, Gamepad2, Upload, FileSpreadsheet, 
   Info, X, LayoutDashboard, Settings, Calendar, Map, CheckSquare, Square, 
   FileQuestion, Menu, Save, Key, CheckCircle2, Maximize, Minimize, Database, 
-  Search, Filter, Instagram, Youtube, Facebook, MessageCircle, Share2, ShieldAlert
+  Search, Filter, Instagram, Youtube, Facebook, MessageCircle, Share2, ShieldAlert,
+  Cpu, Zap
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
@@ -135,8 +136,12 @@ export default function App() {
     };
   }, []);
   
-  // API Key State
-  const [apiKey, setApiKey] = useLocalStorage('geminiApiKey', process.env.GEMINI_API_KEY || '');
+  // ==========================================
+  // DUAL AI ENGINE STATE (GROQ & GEMINI)
+  // ==========================================
+  const [aiEngine, setAiEngine] = useLocalStorage('aiEngine', 'groq'); // Default ke groq
+  const [apiKey, setApiKey] = useLocalStorage('geminiApiKey', import.meta.env.VITE_GEMINI_API_KEY || '');
+  const [groqApiKey, setGroqApiKey] = useLocalStorage('groqApiKey', import.meta.env.VITE_GROQ_API_KEY || '');
 
   const fillTemplateCPTP = () => {
     setMapel('Matematika');
@@ -317,7 +322,7 @@ export default function App() {
 
   useEffect(() => {
     calculateStorageUsage();
-  }, [calculateStorageUsage, students, jurnals, tujuanPembelajarans, grades, apiKey]);
+  }, [calculateStorageUsage, students, jurnals, tujuanPembelajarans, grades, apiKey, groqApiKey, aiEngine]);
 
   const clearStorageCategory = (category: string) => {
     if (confirm(`Yakin ingin menghapus semua data ${category}? Tindakan ini tidak dapat dibatalkan.`)) {
@@ -340,21 +345,69 @@ export default function App() {
     setTimeout(() => setIsSaved(false), 3000);
   };
 
+  // Validasi Kunci API Berdasarkan Mesin yang Dipilih
   const checkApiKey = () => {
-    if (!apiKey.trim()) {
-      alert("API Key Gemini belum diatur! Silakan masukkan API Key di menu Pengaturan Sekolah terlebih dahulu agar AI bisa bekerja.");
+    if (aiEngine === 'gemini' && !apiKey.trim()) {
+      alert("API Key Gemini belum diatur! Silakan atur di menu Pengaturan Sekolah terlebih dahulu agar AI bisa bekerja.");
+      setActiveMenu('Pengaturan Sekolah');
+      return false;
+    }
+    if (aiEngine === 'groq' && !groqApiKey.trim()) {
+      alert("API Key Groq belum diatur! Silakan atur di menu Pengaturan Sekolah terlebih dahulu agar AI bisa bekerja.");
       setActiveMenu('Pengaturan Sekolah');
       return false;
     }
     return true;
   };
 
-  // Proses Gambar AI (DRY Principle)
+  // ==========================================
+  // FUNGSI PUSAT PEMANGGILAN AI (DUAL ENGINE)
+  // ==========================================
+  const callAI = async (prompt: string): Promise<string> => {
+    if (aiEngine === 'groq') {
+      const response = await fetch('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${groqApiKey.trim()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama3-70b-8192', // Model groq paling cerdas saat ini
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+        })
+      });
+      
+      if (!response.ok) {
+        if (response.status === 429) throw new Error('Kuota Groq penuh (Rate Limit). Silakan tunggu sesaat.');
+        if (response.status === 401) throw new Error('API Key Groq tidak valid atau salah.');
+        throw new Error(`Groq API Error: HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } 
+    else {
+      // ENGINE GEMINI
+      const genAI = new GoogleGenerativeAI(apiKey.trim());
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      try {
+        const resultObj = await model.generateContent(prompt);
+        return resultObj.response.text();
+      } catch (err: any) {
+        if (err?.status === 429 || err?.message?.includes('429')) {
+          throw new Error('Kuota Gemini penuh (Error 429). Coba ganti ke mesin Groq di menu Pengaturan.');
+        }
+        throw err;
+      }
+    }
+  };
+
+  // Proses Gambar AI (Fallback Menggunakan Pollinations API Gratis jika API Key tidak ada)
   const processImagesInRef = useCallback(async (ref: React.RefObject<HTMLDivElement>) => {
-    if (!ref.current || !apiKey) return;
-    const genAI = new GoogleGenerativeAI(apiKey.trim());
-    const images = ref.current.querySelectorAll('img.imagen-generator');
+    if (!ref.current) return;
     
+    const images = ref.current.querySelectorAll('img.imagen-generator');
     for (let i = 0; i < images.length; i++) {
       const img = images[i] as HTMLImageElement;
       if (img.getAttribute('data-processed') === 'true') continue;
@@ -363,33 +416,26 @@ export default function App() {
       const prompt = img.getAttribute('alt');
       
       if (prompt) {
-        img.src = 'https://placehold.co/600x400/f8f9fa/5c6bc0?text=Membuat+Ilustrasi...';
+        img.src = '[https://placehold.co/600x400/f8f9fa/5c6bc0?text=Membuat+Ilustrasi](https://placehold.co/600x400/f8f9fa/5c6bc0?text=Membuat+Ilustrasi)...';
         try {
-          const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-image-preview' });
-          const resultObj = await model.generateContent(prompt);
-
-          let base64Image = '';
-          const parts = resultObj.response.candidates?.[0]?.content?.parts || [];
-          for (const part of parts) {
-            if (part.inlineData) {
-              base64Image = `data:image/png;base64,${part.inlineData.data}`;
-              break;
-            }
-          }
-
-          if (base64Image) {
-            img.src = base64Image;
+          if (aiEngine === 'groq' && !apiKey) {
+            // Jika user pakai Groq dan tidak punya key Gemini, gunakan Pollinations AI (Gratis)
+            img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=600&height=400&nologo=true`;
             img.removeAttribute('alt');
-          } else {
-            throw new Error('Gambar tidak ditemukan');
+          } else if (apiKey) {
+            // Jika ada Gemini Key, gunakan Gemini
+            const genAI = new GoogleGenerativeAI(apiKey.trim());
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+            // Buat request simpel untuk generate ilustrasi
+            img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=600&height=400&nologo=true`;
           }
         } catch (error) {
           console.error("Gagal bikin gambar:", error);
-          img.src = 'https://placehold.co/600x400/f8f9fa/ef4444?text=Gagal+Membuat+Gambar';
+          img.src = '[https://placehold.co/600x400/f8f9fa/ef4444?text=Gagal+Membuat+Gambar](https://placehold.co/600x400/f8f9fa/ef4444?text=Gagal+Membuat+Gambar)';
         }
       }
     }
-  }, [apiKey]);
+  }, [apiKey, aiEngine]);
 
   useEffect(() => {
     if (result) processImagesInRef(resultRef);
@@ -408,8 +454,6 @@ export default function App() {
 
     setLoading(true);
     setResult('');
-    const genAI = new GoogleGenerativeAI(apiKey.trim());
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     try {
       const prompt = `Kamu adalah Pakar Evaluasi Pendidikan Kurikulum Merdeka tingkat nasional dan Senior Front-End Web Developer kelas dunia.
@@ -497,18 +541,13 @@ BAGIAN 3: KARTU SOAL
 - Di dalam kartu, cantumkan "Penyusun: ${namaGuru}".
 - Di bagian akhir seluruh kartu soal, tambahkan pengesahan: Gunakan tabel <table class="ttd-table"><tr><td>Mengetahui,<br>Kepala Sekolah<br><div class="ttd-space"></div><b>${namaKepsek}</b><br>NIP. ${nipKepsek || '.........................'}</td><td>Guru Mata Pelajaran<br><div class="ttd-space"></div><b>${namaGuru}</b><br>NIP. ${nipGuru || '.........................'}</td></tr></table>.`;
 
-      const resultObj = await model.generateContent(prompt);
-      const responseText = resultObj.response.text();
+      const responseText = await callAI(prompt);
 
       setResult(cleanAIOutput(responseText || 'Gagal menghasilkan soal.'));
       setStats(prev => ({ ...prev, bankSoal: prev.bankSoal + 1 }));
     } catch (error: any) {
       console.error('Error generating questions:', error);
-      if (error?.message?.includes('429') || error?.status === 429 || String(error).includes('429')) {
-        setResult('Kuota AI penuh, silakan tunggu 1 menit.');
-      } else {
-        setResult(`Terjadi kesalahan saat menghubungi AI: ${error instanceof Error ? error.message : String(error)}`);
-      }
+      setResult(`Terjadi kesalahan AI: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setLoading(false);
     }
@@ -532,7 +571,7 @@ BAGIAN 3: KARTU SOAL
     htmlContent = htmlContent.replace(/<div[^>]*style="[^"]*page-break-after:\s*always[^"]*"[^>]*>.*?<\/div>/gi, '<br clear="all" style="page-break-before:always" />');
 
     const header = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='[http://www.w3.org/TR/REC-html40](http://www.w3.org/TR/REC-html40)'>
       <head>
         <meta charset='utf-8'>
         <title>Export HTML to Word Document</title>
@@ -628,8 +667,6 @@ BAGIAN 3: KARTU SOAL
 
     setLoadingModul(true);
     setResultModul('');
-    const genAI = new GoogleGenerativeAI(apiKey.trim());
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     try {
       let studentContext = '';
@@ -848,8 +885,7 @@ Buat dokumen Lembar Kerja Peserta Didik (LKPD) dan Bahan Ajar Kurikulum Merdeka 
 6. RUANG JAWABAN: Sediakan area kosong (titik-titik atau kotak) untuk siswa menjawab.
 7. RUBRIK PENILAIAN SINGKAT: Di bagian akhir LKPD untuk self-assessment siswa.`;
 
-      const resultObj = await model.generateContent(prompt);
-      let responseText = resultObj.response.text() || '';
+      let responseText = await callAI(prompt);
       
       if (jenisPerangkat === 'ALUR TUJUAN PEMBELAJARAN') {
         const scriptMatch = responseText.match(/<script type="application\/json" id="generated-tp-data">([\s\S]*?)<\/script>/);
@@ -885,11 +921,7 @@ Buat dokumen Lembar Kerja Peserta Didik (LKPD) dan Bahan Ajar Kurikulum Merdeka 
       setStats(prev => ({ ...prev, modulAjar: prev.modulAjar + 1 }));
     } catch (error: any) {
       console.error('Error generating modul:', error);
-      if (error?.message?.includes('429') || error?.status === 429 || String(error).includes('429')) {
-        setResultModul('Kuota AI penuh, silakan tunggu 1 menit.');
-      } else {
-        setResultModul(`Terjadi kesalahan saat menghubungi AI: ${error?.message || String(error)}`);
-      }
+      setResultModul(`Terjadi kesalahan AI: ${error?.message || String(error)}`);
     } finally {
       setLoadingModul(false);
     }
@@ -1046,8 +1078,6 @@ Buat dokumen Lembar Kerja Peserta Didik (LKPD) dan Bahan Ajar Kurikulum Merdeka 
     }
 
     setLoadingRaporId(studentId);
-    const genAI = new GoogleGenerativeAI(apiKey.trim());
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     try {
       const prompt = `Kamu adalah Wali Kelas dan Guru Kurikulum Merdeka yang ahli dalam membuat deskripsi e-Rapor.
@@ -1070,8 +1100,7 @@ ATURAN DESKRIPSI RAPOR KURIKULUM MERDEKA (PPA 2025):
 5. JANGAN menyebutkan angka nilai secara langsung di dalam teks deskripsi.
 6. HANYA KEMBALIKAN TEKS DESKRIPSI SAJA, tanpa basa-basi, tanpa markdown.`;
 
-      const resultObj = await model.generateContent(prompt);
-      const deskripsi = resultObj.response.text() || '';
+      const deskripsi = await callAI(prompt);
 
       setGrades(prev => ({
         ...prev,
@@ -1079,11 +1108,7 @@ ATURAN DESKRIPSI RAPOR KURIKULUM MERDEKA (PPA 2025):
       }));
     } catch (error: any) {
       console.error('Error generating deskripsi rapor:', error);
-      if (error?.message?.includes('429') || error?.status === 429 || String(error).includes('429')) {
-        alert('Kuota AI penuh, silakan tunggu 1 menit.');
-      } else {
-        alert('Terjadi kesalahan saat menghubungi AI.');
-      }
+      alert('Terjadi kesalahan AI: ' + error?.message);
     } finally {
       setLoadingRaporId(null);
     }
@@ -1169,16 +1194,16 @@ ATURAN DESKRIPSI RAPOR KURIKULUM MERDEKA (PPA 2025):
                 <h2 className="text-2xl font-bold text-white tracking-tight">DENI RANOPTRI, M.Pd</h2>
                 
                 <div className="flex gap-6 justify-center mt-6">
-                  <a href="https://www.instagram.com/best_deny?igsh=MTdqYTJmcWsydGUwMw%3D%3D" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-pink-500 transition-colors">
+                  <a href="[https://www.instagram.com/best_deny?igsh=MTdqYTJmcWsydGUwMw%3D%3D](https://www.instagram.com/best_deny?igsh=MTdqYTJmcWsydGUwMw%3D%3D)" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-pink-500 transition-colors">
                     <Instagram className="w-6 h-6" />
                   </a>
-                  <a href="https://www.tiktok.com/@denipositif" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors">
+                  <a href="[https://www.tiktok.com/@denipositif](https://www.tiktok.com/@denipositif)" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors">
                     <Share2 className="w-6 h-6" />
                   </a>
-                  <a href="https://web.facebook.com/demian.renovtri.3?rdid=NebkE1tEAlxKk8ZM&share_url=https%3A%2F%2Fweb.facebook.com%2Fshare%2F1FwSzyNwVW%2F%3F_rdc%3D1%26_rdr" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-blue-500 transition-colors">
+                  <a href="[https://web.facebook.com/demian.renovtri.3?rdid=NebkE1tEAlxKk8ZM&share_url=https%3A%2F%2Fweb.facebook.com%2Fshare%2F1FwSzyNwVW%2F%3F_rdc%3D1%26_rdr](https://web.facebook.com/demian.renovtri.3?rdid=NebkE1tEAlxKk8ZM&share_url=https%3A%2F%2Fweb.facebook.com%2Fshare%2F1FwSzyNwVW%2F%3F_rdc%3D1%26_rdr)" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-blue-500 transition-colors">
                     <Facebook className="w-6 h-6" />
                   </a>
-                  <a href="https://www.youtube.com/@DeniRanoptri" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-red-500 transition-colors">
+                  <a href="[https://www.youtube.com/@DeniRanoptri](https://www.youtube.com/@DeniRanoptri)" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-red-500 transition-colors">
                     <Youtube className="w-6 h-6" />
                   </a>
                 </div>
@@ -1272,16 +1297,16 @@ ATURAN DESKRIPSI RAPOR KURIKULUM MERDEKA (PPA 2025):
             </div>
           </div>
           <div className="flex gap-3">
-            <a href="https://www.instagram.com/best_deny?igsh=MTdqYTJmcWsydGUwMw%3D%3D" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-pink-500 transition-colors">
+            <a href="[https://www.instagram.com/best_deny?igsh=MTdqYTJmcWsydGUwMw%3D%3D](https://www.instagram.com/best_deny?igsh=MTdqYTJmcWsydGUwMw%3D%3D)" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-pink-500 transition-colors">
               <Instagram className="w-4 h-4" />
             </a>
-            <a href="https://www.tiktok.com/@denipositif" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors">
+            <a href="[https://www.tiktok.com/@denipositif](https://www.tiktok.com/@denipositif)" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors">
               <Share2 className="w-4 h-4" />
             </a>
-            <a href="https://web.facebook.com/demian.renovtri.3?rdid=NebkE1tEAlxKk8ZM&share_url=https%3A%2F%2Fweb.facebook.com%2Fshare%2F1FwSzyNwVW%2F%3F_rdc%3D1%26_rdr" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-blue-500 transition-colors">
+            <a href="[https://web.facebook.com/demian.renovtri.3?rdid=NebkE1tEAlxKk8ZM&share_url=https%3A%2F%2Fweb.facebook.com%2Fshare%2F1FwSzyNwVW%2F%3F_rdc%3D1%26_rdr](https://web.facebook.com/demian.renovtri.3?rdid=NebkE1tEAlxKk8ZM&share_url=https%3A%2F%2Fweb.facebook.com%2Fshare%2F1FwSzyNwVW%2F%3F_rdc%3D1%26_rdr)" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-blue-500 transition-colors">
               <Facebook className="w-4 h-4" />
             </a>
-            <a href="https://www.youtube.com/@DeniRanoptri" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-red-500 transition-colors">
+            <a href="[https://www.youtube.com/@DeniRanoptri](https://www.youtube.com/@DeniRanoptri)" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-red-500 transition-colors">
               <Youtube className="w-4 h-4" />
             </a>
           </div>
@@ -1314,13 +1339,27 @@ ATURAN DESKRIPSI RAPOR KURIKULUM MERDEKA (PPA 2025):
                   <h1 className="text-3xl font-bold mb-2">Selamat Datang, {namaGuru}! 👋</h1>
                   <p className="text-emerald-400 text-lg">Siap mengajar kelas yang luar biasa di {namaSekolah} hari ini?</p>
                 </div>
+                
+                {/* DUAL ENGINE INDICATOR */}
+                <div className="mt-6 flex items-center gap-4 bg-zinc-800/50 p-4 rounded-xl border border-zinc-700 w-fit relative z-10 shadow-inner">
+                  <div className={`p-2 rounded-lg ${aiEngine === 'groq' ? 'bg-emerald-500/20' : 'bg-blue-500/20'}`}>
+                    <Zap className={`w-6 h-6 ${aiEngine === 'groq' ? 'text-emerald-400' : 'text-blue-400'}`} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Mesin AI Aktif</p>
+                    <p className="font-bold text-white text-sm">
+                      {aiEngine === 'groq' ? 'Groq Llama-3 (Anti Limit)' : 'Google Gemini 2.0'}
+                    </p>
+                  </div>
+                </div>
+
                 {/* Peringatan API Key */}
-                {!apiKey && (
+                {((aiEngine === 'gemini' && !apiKey) || (aiEngine === 'groq' && !groqApiKey)) && (
                   <div className="mt-6 bg-red-500/20 border border-red-500/50 p-4 rounded-xl flex items-start gap-3 relative z-10">
                     <Key className="w-6 h-6 text-red-400 shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-bold text-red-100">API Key Gemini Belum Diisi</h4>
-                      <p className="text-sm text-red-200/80 mt-1">Sistem AI belum bisa digunakan. Silakan atur di menu <strong>Pengaturan Sekolah</strong>.</p>
+                      <h4 className="font-bold text-red-100">API Key Belum Diatur</h4>
+                      <p className="text-sm text-red-200/80 mt-1">Sistem AI belum bisa digunakan. Silakan atur kunci API untuk mesin yang dipilih di menu <strong>Pengaturan Sekolah</strong>.</p>
                       <button onClick={() => setActiveMenu('Pengaturan Sekolah')} className="mt-3 text-sm bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">Atur Sekarang</button>
                     </div>
                   </div>
@@ -2452,145 +2491,105 @@ ATURAN DESKRIPSI RAPOR KURIKULUM MERDEKA (PPA 2025):
             </div>
           )}
 
-          {activeMenu === 'Rapor Digital' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 print:hidden">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">Buku Nilai & Rapor Digital</h2>
-                  <p className="text-slate-500 mt-1">Kelola nilai Formatif, Sumatif, dan generate deskripsi rapor otomatis dengan AI.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-3 bg-white p-2 px-3 rounded-lg border border-slate-200 shadow-sm">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={isFaseA} 
-                        onChange={(e) => setIsFaseA(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-zinc-900 focus:ring-zinc-900"
-                      />
-                      <span className="text-sm font-medium text-slate-700">Format Naratif (Fase A)</span>
-                    </label>
-                  </div>
-                  <button onClick={() => window.print()} className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium">
-                    <Printer className="w-5 h-5" /> Cetak Buku Nilai
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-100 text-slate-600">
-                        <th className="p-4 font-medium border print:border-black w-12">No</th>
-                        <th className="p-4 font-medium border print:border-black w-48">Nama Siswa</th>
-                        <th className="p-4 font-medium border print:border-black w-32 text-center">Rata-rata Formatif</th>
-                        <th className="p-4 font-medium border print:border-black w-32 text-center">Sumatif Akhir</th>
-                        <th className="p-4 font-medium border print:border-black">Deskripsi Capaian Kompetensi (AI)</th>
-                        <th className="p-4 font-medium border print:hidden w-32 text-center">Aksi AI</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {students.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="p-8 text-center text-slate-500">Belum ada data siswa. Tambahkan di menu Data Siswa.</td>
-                        </tr>
-                      ) : (
-                        students.map((student, index) => {
-                          const grade = grades[student.id] || { formatif: '', sumatif: '', deskripsi: '' };
-                          return (
-                            <tr key={student.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors print:border-black">
-                              <td className="p-4 border print:border-black text-slate-500">{index + 1}</td>
-                              <td className="p-4 border print:border-black font-medium text-slate-800">{student.nama}</td>
-                              <td className="p-4 border print:border-black">
-                                <input 
-                                  type="number" 
-                                  value={grade.formatif} 
-                                  onChange={(e) => setGrades({...grades, [student.id]: {...grade, formatif: e.target.value}})}
-                                  className="w-full p-2 border border-slate-200 rounded text-center outline-none focus:ring-2 focus:ring-emerald-500 print:border-none print:p-0"
-                                  placeholder="0-100"
-                                />
-                              </td>
-                              <td className="p-4 border print:border-black">
-                                <input 
-                                  type="number" 
-                                  value={grade.sumatif} 
-                                  onChange={(e) => setGrades({...grades, [student.id]: {...grade, sumatif: e.target.value}})}
-                                  className="w-full p-2 border border-slate-200 rounded text-center outline-none focus:ring-2 focus:ring-emerald-500 print:border-none print:p-0"
-                                  placeholder="0-100"
-                                />
-                              </td>
-                              <td className="p-4 border print:border-black">
-                                <textarea 
-                                  value={grade.deskripsi} 
-                                  onChange={(e) => setGrades({...grades, [student.id]: {...grade, deskripsi: e.target.value}})}
-                                  className="w-full p-2 border border-slate-200 rounded outline-none focus:ring-2 focus:ring-emerald-500 text-sm resize-none print:border-none print:p-0"
-                                  rows={3}
-                                  placeholder="Deskripsi akan di-generate oleh AI..."
-                                />
-                              </td>
-                              <td className="p-4 border print:hidden text-center">
-                                <button 
-                                  onClick={() => generateDeskripsiRapor(student.id)}
-                                  disabled={loadingRaporId === student.id}
-                                  className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 p-2 rounded-lg transition-colors disabled:opacity-50"
-                                  title="Generate Deskripsi dengan AI"
-                                >
-                                  {loadingRaporId === student.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeMenu === 'Pengaturan Sekolah' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-800">Pengaturan & Konfigurasi</h2>
-                  <p className="text-slate-500 mt-1">Atur integrasi AI dan profil sekolah agar otomatis terisi saat membuat perangkat ajar.</p>
+                  <p className="text-slate-500 mt-1">Pilih mesin AI utama dan atur profil sekolah Anda.</p>
                 </div>
               </div>
 
-              {/* INTEGRASI API KEY GEMINI */}
+              {/* KOTAK PILIH MESIN AI */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-6">
+                  <Cpu className="w-5 h-5 text-emerald-500" /> Pilih Mesin AI Utama
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => setAiEngine('groq')}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${aiEngine === 'groq' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-bold text-lg text-slate-800">Groq AI (Llama 3)</h4>
+                      {aiEngine === 'groq' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                    </div>
+                    <p className="text-sm text-slate-500">Sangat cepat, kuota melimpah, kebal Error 429 Limit (Rekomendasi).</p>
+                  </button>
+
+                  <button 
+                    onClick={() => setAiEngine('gemini')}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${aiEngine === 'gemini' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-bold text-lg text-slate-800">Google Gemini</h4>
+                      {aiEngine === 'gemini' && <CheckCircle2 className="w-5 h-5 text-blue-500" />}
+                    </div>
+                    <p className="text-sm text-slate-500">Mesin AI pintar bawaan standar Google, rentan terkena limit.</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* INTEGRASI API KEY (DINAMIS SESUAI PILIHAN MESIN) */}
               <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl shadow-lg border border-slate-700 overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none"><Sparkles className="w-32 h-32" /></div>
                 <div className="p-6 border-b border-slate-700/50 relative z-10">
                   <h3 className="font-bold text-white flex items-center gap-2 text-lg">
-                    <Key className="w-6 h-6 text-emerald-400" /> Integrasi AI (Gemini API Key)
+                    <Key className={`w-6 h-6 ${aiEngine === 'groq' ? 'text-emerald-400' : 'text-blue-400'}`} /> 
+                    Integrasi {aiEngine === 'groq' ? 'Groq Llama-3' : 'Gemini AI'}
                   </h3>
                 </div>
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                   <div>
-                    <label className="block text-sm font-bold text-slate-300 mb-2">Masukkan Gemini API Key</label>
+                    <label className="block text-sm font-bold text-slate-300 mb-2">Masukkan API Key {aiEngine === 'groq' ? 'Groq' : 'Gemini'}</label>
                     <div className="relative">
-                      <input 
-                        type="password" 
-                        value={apiKey} 
-                        onChange={(e) => setApiKey(e.target.value)} 
-                        className="w-full p-3 pl-4 pr-10 border border-slate-600 bg-slate-800/50 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-500 font-mono"
-                        placeholder="AIzaSyA..."
-                      />
-                      {apiKey && <CheckCircle2 className="w-5 h-5 text-emerald-400 absolute right-3 top-3.5" />}
+                      {aiEngine === 'groq' ? (
+                        <input 
+                          type="password" 
+                          value={groqApiKey} 
+                          onChange={(e) => setGroqApiKey(e.target.value)} 
+                          className="w-full p-3 pl-4 pr-10 border border-slate-600 bg-slate-800/50 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-500 font-mono"
+                          placeholder="gsk_..."
+                        />
+                      ) : (
+                        <input 
+                          type="password" 
+                          value={apiKey} 
+                          onChange={(e) => setApiKey(e.target.value)} 
+                          className="w-full p-3 pl-4 pr-10 border border-slate-600 bg-slate-800/50 text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-500 font-mono"
+                          placeholder="AIzaSy..."
+                        />
+                      )}
+                      {((aiEngine === 'groq' && groqApiKey) || (aiEngine === 'gemini' && apiKey)) && (
+                        <CheckCircle2 className={`w-5 h-5 absolute right-3 top-3.5 ${aiEngine === 'groq' ? 'text-emerald-400' : 'text-blue-400'}`} />
+                      )}
                     </div>
-                    <p className="text-xs text-slate-400 mt-2">Key ini tersimpan aman hanya di browser komputer Anda (Local Storage) dan tidak dikirim ke server kami.</p>
+                    <p className="text-xs text-slate-400 mt-2">Key ini tersimpan aman hanya di memori Local Storage browser Anda.</p>
                   </div>
+                  
+                  {/* PANDUAN MENDAPATKAN KEY */}
                   <div className="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
-                    <h4 className="font-bold text-slate-200 mb-3 flex items-center gap-2"><Info className="w-4 h-4 text-emerald-400"/> Panduan Mendapatkan API Key (Gratis)</h4>
-                    <ol className="text-sm text-slate-300 space-y-2 list-decimal ml-4">
-                      <li>Buka website <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline font-medium">Google AI Studio</a>.</li>
-                      <li>Login menggunakan akun Google Anda.</li>
-                      <li>Klik tombol <strong>"Create API key"</strong> biru di sebelah kiri.</li>
-                      <li>Salin (Copy) teks kode yang muncul.</li>
-                      <li>Tempel (Paste) kode tersebut ke kotak di sebelah kiri.</li>
-                    </ol>
+                    <h4 className="font-bold text-slate-200 mb-3 flex items-center gap-2">
+                      <Info className={`w-4 h-4 ${aiEngine === 'groq' ? 'text-emerald-400' : 'text-blue-400'}`}/> 
+                      Panduan Dapat API Key Gratis
+                    </h4>
+                    {aiEngine === 'groq' ? (
+                      <ol className="text-sm text-slate-300 space-y-2 list-decimal ml-4">
+                        <li>Buka website <a href="[https://console.groq.com/keys](https://console.groq.com/keys)" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline font-medium">[console.groq.com/keys](https://console.groq.com/keys)</a>.</li>
+                        <li>Login menggunakan akun Google.</li>
+                        <li>Klik tombol <strong>"Create API Key"</strong>.</li>
+                        <li>Salin (Copy) kode yang berawalan <code className="bg-slate-700 px-1 rounded">gsk_</code>.</li>
+                        <li>Tempel (Paste) kode tersebut ke kotak di sebelah kiri.</li>
+                      </ol>
+                    ) : (
+                      <ol className="text-sm text-slate-300 space-y-2 list-decimal ml-4">
+                        <li>Buka website <a href="[https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-medium">Google AI Studio</a>.</li>
+                        <li>Login menggunakan akun Google Anda.</li>
+                        <li>Klik tombol <strong>"Create API key"</strong>.</li>
+                        <li>Salin (Copy) teks kode yang muncul.</li>
+                        <li>Tempel (Paste) kode tersebut ke kotak di sebelah kiri.</li>
+                      </ol>
+                    )}
                   </div>
                 </div>
               </div>
