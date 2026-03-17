@@ -375,12 +375,14 @@ export default function App() {
     return true;
   };
 
- // ==========================================
-  // FUNGSI PUSAT PEMANGGILAN AI (AUTO FALLBACK)
+// ==========================================
+  // FUNGSI PUSAT PEMANGGILAN AI (VERSI FIX 404)
   // ==========================================
   const callAI = async (prompt: string): Promise<string> => {
-    // Fungsi khusus panggil Groq (Pakai model 8B biar awet 500k token/hari)
+    
+    // 1. Fungsi panggil Groq (Model 8B Instant - Awet & Kencang)
     const fetchGroq = async () => {
+      console.log("🚀 Mencoba Groq AI...");
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -388,46 +390,58 @@ export default function App() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant', // Super awet & anti-limit 429
+          model: 'llama-3.1-8b-instant', 
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 4096 // Tetap dibesarkan agar HTML tidak terpotong
+          max_tokens: 4096
         })
       });
       
-      if (!response.ok) throw new Error(`Groq HTTP ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Groq Error: ${response.status} - ${errorData.error?.message || ''}`);
+      }
+      
       const data = await response.json();
+      console.log("✅ Groq Berhasil!");
       return data.choices[0].message.content;
     };
 
-    // Fungsi khusus panggil Gemini (Sebagai Backup)
+    // 2. Fungsi panggil Gemini (Gunakan 2.0 Flash agar TIDAK 404)
     const fetchGemini = async () => {
+      console.log("☁️ Mencoba Gemini AI...");
       const genAI = new GoogleGenerativeAI(apiKey.trim());
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); 
+      // Kita pakai gemini-2.0-flash karena 1.5-flash sering 404 di beberapa region
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }); 
       const resultObj = await model.generateContent(prompt);
+      console.log("✅ Gemini Berhasil!");
       return resultObj.response.text();
     };
 
-    // LOGIKA AUTO-PILOT (ALIH MESIN OTOMATIS JIKA ERROR/LIMIT)
+    // 3. LOGIKA EKSEKUSI DENGAN FALLBACK
     if (aiEngine === 'groq') {
       try {
+        if (!groqApiKey) throw new Error("API Key Groq belum diisi");
         return await fetchGroq();
-      } catch (err) {
-        console.warn("Groq gagal atau limit. Otomatis dialihkan ke Gemini...", err);
+      } catch (err: any) {
+        console.error("❌ Groq Gagal:", err.message);
         if (apiKey) {
+          console.warn("🔄 Alih otomatis ke Gemini...");
           return await fetchGemini();
         }
-        throw new Error('Groq sedang bermasalah, dan API Key Gemini belum diisi sebagai cadangan!');
+        throw new Error(`Groq Gagal (${err.message}) & Cadangan Gemini Kosong.`);
       }
     } else {
       try {
+        if (!apiKey) throw new Error("API Key Gemini belum diisi");
         return await fetchGemini();
-      } catch (err) {
-        console.warn("Gemini gagal atau limit. Otomatis dialihkan ke Groq...", err);
+      } catch (err: any) {
+        console.error("❌ Gemini Gagal:", err.message);
         if (groqApiKey) {
+          console.warn("🔄 Alih otomatis ke Groq...");
           return await fetchGroq();
         }
-        throw new Error('Gemini sedang penuh (Error 429), dan API Key Groq belum diisi sebagai cadangan!');
+        throw new Error(`Gemini Gagal (${err.message}) & Cadangan Groq Kosong.`);
       }
     }
   };
