@@ -142,7 +142,22 @@ export default function App() {
   const [aiEngine, setAiEngine] = useLocalStorage('aiEngine', 'groq'); // Default ke groq
   const [apiKey, setApiKey] = useLocalStorage('geminiApiKey', import.meta.env.VITE_GEMINI_API_KEY || '');
   const [groqApiKey, setGroqApiKey] = useLocalStorage('groqApiKey', import.meta.env.VITE_GROQ_API_KEY || '');
-
+// Trik Pro: Cek daftar model GROQ yang aktif di API Key kamu
+  useEffect(() => {
+    const checkGroqModels = async () => {
+      if (aiEngine !== 'groq' || !groqApiKey) return;
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/models', {
+          headers: { 'Authorization': `Bearer ${groqApiKey.trim()}` }
+        });
+        const data = await response.json();
+        console.log("🔥 DAFTAR MODEL GROQ YANG TERSEDIA:", data.data.map((m: any) => m.id));
+      } catch (e) {
+        console.error("Gagal ngecek model Groq:", e);
+      }
+    };
+    checkGroqModels();
+  }, [groqApiKey, aiEngine]);
   const fillTemplateCPTP = () => {
     setMapel('Matematika');
     setJenjang('SD');
