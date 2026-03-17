@@ -372,7 +372,7 @@ export default function App() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama3-70b-8192', // Model groq paling cerdas saat ini
+          model: 'llama-3.3-70b-versatile', // Model groq paling cerdas saat ini
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
         })
