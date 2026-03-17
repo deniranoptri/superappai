@@ -375,49 +375,62 @@ export default function App() {
     return true;
   };
 
-  // ==========================================
-  // FUNGSI PUSAT PEMANGGILAN AI (DUAL ENGINE)
+ // ==========================================
+  // FUNGSI PUSAT PEMANGGILAN AI (AUTO FALLBACK)
   // ==========================================
   const callAI = async (prompt: string): Promise<string> => {
-    if (aiEngine === 'groq') {
-      const response = await fetch('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+    // Fungsi khusus panggil Groq (Pakai model 8B biar awet 500k token/hari)
+    const fetchGroq = async () => {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${groqApiKey.trim()}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant', // Model groq paling cerdas saat ini
+          model: 'llama-3.1-8b-instant', // Super awet & anti-limit 429
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
+          max_tokens: 4096 // Tetap dibesarkan agar HTML tidak terpotong
         })
       });
       
-      if (!response.ok) {
-        if (response.status === 429) throw new Error('Kuota Groq penuh (Rate Limit). Silakan tunggu sesaat.');
-        if (response.status === 401) throw new Error('API Key Groq tidak valid atau salah.');
-        throw new Error(`Groq API Error: HTTP ${response.status}`);
-      }
-      
+      if (!response.ok) throw new Error(`Groq HTTP ${response.status}`);
       const data = await response.json();
       return data.choices[0].message.content;
-    } 
-    else {
-      // ENGINE GEMINI
+    };
+
+    // Fungsi khusus panggil Gemini (Sebagai Backup)
+    const fetchGemini = async () => {
       const genAI = new GoogleGenerativeAI(apiKey.trim());
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); 
+      const resultObj = await model.generateContent(prompt);
+      return resultObj.response.text();
+    };
+
+    // LOGIKA AUTO-PILOT (ALIH MESIN OTOMATIS JIKA ERROR/LIMIT)
+    if (aiEngine === 'groq') {
       try {
-        const resultObj = await model.generateContent(prompt);
-        return resultObj.response.text();
-      } catch (err: any) {
-        if (err?.status === 429 || err?.message?.includes('429')) {
-          throw new Error('Kuota Gemini penuh (Error 429). Coba ganti ke mesin Groq di menu Pengaturan.');
+        return await fetchGroq();
+      } catch (err) {
+        console.warn("Groq gagal atau limit. Otomatis dialihkan ke Gemini...", err);
+        if (apiKey) {
+          return await fetchGemini();
         }
-        throw err;
+        throw new Error('Groq sedang bermasalah, dan API Key Gemini belum diisi sebagai cadangan!');
+      }
+    } else {
+      try {
+        return await fetchGemini();
+      } catch (err) {
+        console.warn("Gemini gagal atau limit. Otomatis dialihkan ke Groq...", err);
+        if (groqApiKey) {
+          return await fetchGroq();
+        }
+        throw new Error('Gemini sedang penuh (Error 429), dan API Key Groq belum diisi sebagai cadangan!');
       }
     }
   };
-
   // Proses Gambar AI (Fallback Menggunakan Pollinations API Gratis jika API Key tidak ada)
   const processImagesInRef = useCallback(async (ref: React.RefObject<HTMLDivElement>) => {
     if (!ref.current) return;
